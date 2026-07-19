@@ -21,6 +21,7 @@ const INCOME_CATEGORY_NAMES = new Set(['Ingresos']);
 const state = {
     user: null,
     transactions: [],
+    recentTransactions: [],
     budgets: [],
     budgetStatus: [],
     categories: [],
@@ -84,6 +85,12 @@ const utils = {
         if (parts.length !== 3) return dateString;
         const date = new Date(+parts[0], +parts[1] - 1, +parts[2]);
         return date.toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric' });
+    },
+    localDateInputValue(date = new Date()) {
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
     },
     escapeHtml(str) {
         if (typeof str !== 'string') return str;
@@ -162,10 +169,11 @@ async function loadAllData() {
         if (state.reportFilters.date_to) reportParams.date_to = state.reportFilters.date_to;
 
         const [
-            transactions, budgets, budgetStatus, categories, subcategories,
+            transactions, recentTransactions, budgets, budgetStatus, categories, subcategories,
             accounts, counterparties, report, user,
         ] = await Promise.all([
             api.getTransactions(txParams),
+            api.getRecentTransactions(5),
             api.getBudgets(state.ui.budgetsIncludeInactive),
             api.getBudgetStatus(),
             api.getCategories(true),
@@ -177,6 +185,7 @@ async function loadAllData() {
         ]);
 
         state.transactions = transactions;
+        state.recentTransactions = recentTransactions;
         state.budgets = budgets;
         state.budgetStatus = budgetStatus;
         state.categories = categories;
@@ -252,6 +261,29 @@ function showToast(message, type = 'success') {
     }, 3500);
 }
 
+async function withSubmitLock(event, pendingLabel, operation) {
+    const form = event.currentTarget;
+    if (!form || form.dataset.submitting === 'true') return;
+
+    const submit = event.submitter || form.querySelector('button[type="submit"]');
+    const originalLabel = submit?.textContent;
+    form.dataset.submitting = 'true';
+    if (submit) {
+        submit.disabled = true;
+        submit.textContent = pendingLabel;
+    }
+
+    try {
+        await operation();
+    } finally {
+        if (form.isConnected) delete form.dataset.submitting;
+        if (submit?.isConnected) {
+            submit.disabled = false;
+            submit.textContent = originalLabel;
+        }
+    }
+}
+
 // --- Auth ---
 function switchAuthTab(tab) {
     const loginForm = document.getElementById('login-form');
@@ -278,13 +310,14 @@ function switchAuthTab(tab) {
     }
 }
 
+function goToHome() {
+    showApp(true);
+    toggleMobileMenu(false);
+    Router.navigateTo('landing', { allowAuthenticatedLanding: true });
+}
+
 function returnToLanding() {
-    if (state.user) {
-        Router.navigateTo('dashboard');
-    } else {
-        closeAuthScreen();
-        Router.navigateTo('landing');
-    }
+    goToHome();
 }
 
 async function handleLogin(event) {
@@ -301,9 +334,9 @@ async function handleLogin(event) {
             return;
         }
         showApp(true);
-        showToast('Sesión iniciada');
-        Router.init(state, utils);
         await loadAllData();
+        Router.navigateTo('dashboard');
+        showToast('Sesión iniciada');
     } catch (err) {
         showToast(err.message || 'No se pudo iniciar sesión', 'error');
     }
@@ -316,9 +349,9 @@ async function handleMfaVerify(event) {
         await api.mfaVerify(state.pendingMfaToken, code);
         state.pendingMfaToken = null;
         showApp(true);
-        showToast('Sesión iniciada');
-        Router.init(state, utils);
         await loadAllData();
+        Router.navigateTo('dashboard');
+        showToast('Sesión iniciada');
     } catch (err) {
         showToast(err.message || 'Código MFA inválido', 'error');
     }
@@ -355,15 +388,14 @@ async function handleLogout(showMessage = true) {
     try { await api.logout(); } catch { api.clearSession(); }
     state.user = null;
     state.pendingMfaToken = null;
+    showApp(true);
     Router.navigateTo('landing');
-    showAuthScreen('login');
     if (showMessage) showToast('Sesión cerrada', 'info');
 }
 
 // --- Filters / reload helpers ---
 async function applyTransactionFilters(filters) {
     state.txFilters = { ...filters };
-    delete state.txFilters.search;
     await loadAllData();
 }
 
@@ -508,7 +540,7 @@ function openTransactionModal(id = null) {
     if (!form) return;
     form.reset();
     document.getElementById('trans-id').value = '';
-    document.getElementById('trans-date').value = new Date().toISOString().split('T')[0];
+    document.getElementById('trans-date').value = utils.localDateInputValue();
     document.getElementById('trans-moneda').value = 'COP';
     populateAccountSelect();
     populateContraparteSelect();
@@ -584,15 +616,17 @@ async function saveTransaction(event) {
         payload.account_id = null;
     }
 
-    try {
-        if (id) await api.updateTransaction(id, payload);
-        else await api.createTransaction(payload);
-        closeTransactionModal();
-        showToast(id ? 'Transacción actualizada' : 'Transacción creada');
-        await loadAllData();
-    } catch (err) {
-        showToast(err.message, 'error');
-    }
+    await withSubmitLock(event, 'Guardando…', async () => {
+        try {
+            if (id) await api.updateTransaction(id, payload);
+            else await api.createTransaction(payload);
+            closeTransactionModal();
+            showToast(id ? 'Transacción actualizada' : 'Transacción creada');
+            await loadAllData();
+        } catch (err) {
+            showToast(err.message, 'error');
+        }
+    });
 }
 
 async function deleteTransactionFlow(id) {
@@ -842,14 +876,16 @@ async function saveTransfer(event) {
     if (!Number.isFinite(payload.monto) || payload.monto <= 0) {
         return showToast('El monto debe ser mayor a 0.', 'error');
     }
-    try {
-        await api.createTransfer(payload);
-        showToast('Transferencia registrada');
-        document.getElementById('transfer-form')?.reset();
-        await loadAllData();
-    } catch (err) {
-        showToast(err.message, 'error');
-    }
+    await withSubmitLock(event, 'Transfiriendo…', async () => {
+        try {
+            await api.createTransfer(payload);
+            showToast('Transferencia registrada');
+            document.getElementById('transfer-form')?.reset();
+            await loadAllData();
+        } catch (err) {
+            showToast(err.message, 'error');
+        }
+    });
 }
 
 // --- Catalog ---
@@ -1035,7 +1071,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         openCategoryModal, closeCategoryModal, saveCategory, deactivateCategoryFlow,
         openSubcategoryModal, closeSubcategoryModal, saveSubcategory, deactivateSubcategoryFlow,
         saveProfile, startMfaSetup, confirmMfaSetup, deactivateOwnAccount, loadAllData,
-        toggleMobileMenu, showAuthScreen, closeAuthScreen, returnToLanding
+        toggleMobileMenu, showAuthScreen, closeAuthScreen, goToHome, returnToLanding
     };
     Object.assign(window, bind);
 

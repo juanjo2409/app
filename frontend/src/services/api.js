@@ -324,6 +324,12 @@ export const api = {
         return fetchAllPages('/transactions', filters);
     },
 
+    async getRecentTransactions(limit = 5) {
+        const qs = toQuery({ limit, offset: 0 });
+        const page = await request(`/transactions?${qs}`);
+        return page.items || [];
+    },
+
     async getTransaction(id) {
         return request(`/transactions/${id}`);
     },

@@ -34,7 +34,7 @@ function fmtRange(utils, from, to) {
 export const DashboardView = {
     render() {
         return `
-            <div class="space-y-8 animate-fade-in">
+            <div class="dashboard-view space-y-7">
                 <div class="glass-card p-4 rounded-2xl grid grid-cols-1 md:grid-cols-4 gap-3 items-end">
                     <div class="space-y-1">
                         <label class="text-[10px] font-semibold text-slate-500 uppercase">Cuenta</label>
@@ -48,15 +48,15 @@ export const DashboardView = {
                         <label class="text-[10px] font-semibold text-slate-500 uppercase">Hasta</label>
                         <input type="date" id="report-date-to" class="glass-input w-full px-3 py-2 rounded-xl text-sm">
                     </div>
-                    <button id="btn-apply-report" class="px-4 py-2 bg-indigo-500/20 border border-indigo-500/40 text-indigo-300 rounded-xl text-sm font-semibold">Actualizar reporte</button>
+                    <button id="btn-apply-report" class="px-4 py-2 bg-cyan-400 hover:bg-cyan-300 text-slate-950 rounded-lg text-sm font-bold">Actualizar reporte</button>
                 </div>
 
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
-                    <div class="glass-card p-5 rounded-2xl"><p class="text-xs text-slate-400 mb-2">Saldo neto</p><h3 id="stat-balance" class="text-2xl font-extrabold text-white">$0</h3></div>
-                    <div class="glass-card p-5 rounded-2xl"><p class="text-xs text-slate-400 mb-2">Ingresos</p><h3 id="stat-income" class="text-2xl font-extrabold text-emerald-400">$0</h3></div>
-                    <div class="glass-card p-5 rounded-2xl"><p class="text-xs text-slate-400 mb-2">Gastos</p><h3 id="stat-expense" class="text-2xl font-extrabold text-rose-400">$0</h3></div>
-                    <div class="glass-card p-5 rounded-2xl"><p class="text-xs text-slate-400 mb-2">Transferencias</p><h3 id="stat-transfers" class="text-2xl font-extrabold text-indigo-300">$0</h3></div>
-                    <div class="glass-card p-5 rounded-2xl"><p class="text-xs text-slate-400 mb-2">Presupuesto</p><h3 id="stat-budget-percent" class="text-2xl font-extrabold text-slate-200">0%</h3><div class="mt-2 w-full bg-slate-800 rounded-full h-1.5"><div id="stat-budget-bar" class="bg-indigo-500 h-1.5 rounded-full" style="width:0%"></div></div></div>
+                <div class="dashboard-stats grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5">
+                    <div class="dashboard-stat"><p class="text-xs text-slate-400 mb-2">Saldo neto</p><h3 id="stat-balance" class="text-2xl font-bold text-white">$0</h3></div>
+                    <div class="dashboard-stat"><p class="text-xs text-slate-400 mb-2">Ingresos</p><h3 id="stat-income" class="text-2xl font-bold text-emerald-400">$0</h3></div>
+                    <div class="dashboard-stat"><p class="text-xs text-slate-400 mb-2">Gastos</p><h3 id="stat-expense" class="text-2xl font-bold text-rose-400">$0</h3></div>
+                    <div class="dashboard-stat"><p class="text-xs text-slate-400 mb-2">Transferencias</p><h3 id="stat-transfers" class="text-2xl font-bold text-violet-300">$0</h3></div>
+                    <div class="dashboard-stat"><p class="text-xs text-slate-400 mb-2">Presupuesto</p><h3 id="stat-budget-percent" class="text-2xl font-bold text-slate-200">0%</h3><div class="mt-2 w-full bg-slate-800 rounded-full h-1.5"><div id="stat-budget-bar" class="bg-cyan-400 h-1.5 rounded-full" style="width:0%"></div></div></div>
                 </div>
 
                 <div id="period-comparison" class="glass-card p-6 rounded-2xl hidden overflow-hidden relative"></div>
@@ -166,7 +166,7 @@ export const DashboardView = {
             el.textContent = utils.formatCurrency(val);
             if (cls) el.className = cls;
         };
-        set('stat-balance', net, net < 0 ? 'text-2xl font-extrabold text-rose-400' : 'text-2xl font-extrabold text-white');
+        set('stat-balance', net, net < 0 ? 'text-2xl font-bold text-rose-400' : 'text-2xl font-bold text-white');
         set('stat-income', totalIncome);
         set('stat-expense', totalExpense);
         set('stat-transfers', transfers);
@@ -196,7 +196,6 @@ export const DashboardView = {
             const expensePct = fmtPct(pc.gastos_change_pct);
 
             box.innerHTML = `
-                <div class="absolute -right-8 -top-8 w-40 h-40 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none"></div>
                 <div class="relative space-y-5">
                     <div class="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3">
                         <div>
@@ -304,7 +303,7 @@ export const DashboardView = {
         const tbody = document.getElementById('recent-transactions-tbody');
         if (!tbody) return;
         tbody.innerHTML = '';
-        const recent = [...(state.transactions || [])]
+        const recent = [...(state.recentTransactions || [])]
             .sort((a, b) => String(b.fecha).localeCompare(String(a.fecha)) || (b.id - a.id))
             .slice(0, 5);
         if (!recent.length) {

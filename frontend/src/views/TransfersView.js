@@ -56,7 +56,7 @@ export const TransfersView = {
         const cat = document.getElementById('transfer-category');
         const sub = document.getElementById('transfer-subcategory');
 
-        if (date) date.value = new Date().toISOString().split('T')[0];
+        if (date) date.value = utils.localDateInputValue();
 
         const fillAccounts = (select, list) => {
             if (!select) return;

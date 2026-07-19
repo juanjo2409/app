@@ -29,7 +29,7 @@ const headers = {
     budgets: ['Presupuestos', 'Límites mensuales y consumo del periodo.'],
     catalog: ['Catálogo', 'Categorías y subcategorías (admin + MFA).'],
     settings: ['Ajustes', 'Perfil, MFA y desactivación de cuenta.'],
-    landing: ['FinanzasFlow', 'Descubre el control total de tus finanzas.'],
+    landing: ['LuCash', 'Descubre el control total de tus finanzas.'],
 };
 
 export const Router = {
@@ -51,7 +51,7 @@ export const Router = {
         if (catalogNav) catalogNav.classList.toggle('hidden', !showCatalog);
     },
 
-    navigateTo(routeId) {
+    navigateTo(routeId, { allowAuthenticatedLanding = false } = {}) {
         if (routeId === 'catalog') {
             const user = this.state?.user;
             if (!(user?.rol === 'admin' && user?.mfa_enabled)) {
@@ -66,19 +66,21 @@ export const Router = {
         }
 
         // Route Guard for public routes (e.g. landing)
-        if (routeId === 'landing' && this.state?.user) {
+        if (routeId === 'landing' && this.state?.user && !allowAuthenticatedLanding) {
             routeId = 'dashboard';
         }
 
         this.activeRoute = routeId;
 
         const sidebar = document.getElementById('app-sidebar');
+        const main = document.getElementById('app-main');
         const header = document.getElementById('app-header');
         const viewport = document.getElementById('router-viewport');
 
         if (routeId === 'landing') {
             sidebar?.classList.add('hidden');
             sidebar?.classList.remove('flex');
+            main?.classList.remove('md:ml-64');
             header?.classList.add('hidden');
             header?.classList.remove('flex');
             viewport?.classList.remove('p-4', 'md:p-8');
@@ -86,6 +88,7 @@ export const Router = {
         } else {
             sidebar?.classList.remove('hidden');
             sidebar?.classList.add('flex');
+            main?.classList.add('md:ml-64');
             header?.classList.remove('hidden');
             header?.classList.add('flex');
             viewport?.classList.remove('p-0');
@@ -98,7 +101,13 @@ export const Router = {
         document.querySelectorAll('.nav-link').forEach((el) => el.classList.remove('active'));
         document.getElementById(`nav-${routeId}`)?.classList.add('active');
 
-        const [title, subtitle] = headers[routeId] || ['', ''];
+        let [title, subtitle] = headers[routeId] || ['', ''];
+        if (routeId === 'dashboard' && this.state?.user) {
+            const rawName = this.state.user.nombres || this.state.user.usuario || 'usuario';
+            const firstName = String(rawName).trim().split(/\s+/)[0];
+            title = `Hola, ${firstName}`;
+            subtitle = '';
+        }
         const titleEl = document.getElementById('page-title');
         const subtitleEl = document.getElementById('page-subtitle');
         if (titleEl) titleEl.textContent = title;

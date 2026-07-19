@@ -1,4 +1,4 @@
-# FinanzasFlow — Frontend
+# LuCash — Frontend
 
 SPA de control de finanzas personales. Consume la API REST del backend en **`/api/v1`**.
 

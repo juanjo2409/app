@@ -1,4 +1,4 @@
-/* Estilos Personalizados - FinanzasFlow */
+/* Estilos personalizados - LuCash */
 
 @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
 
@@ -117,12 +117,12 @@ tr:hover {
 
 /* Active Navigation Styles */
 .nav-link {
-    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: background-color 140ms ease, color 140ms ease;
 }
 .nav-link.active {
-    background: linear-gradient(135deg, rgba(99, 102, 241, 0.2) 0%, rgba(168, 85, 247, 0.2) 100%);
+    background: rgba(34, 211, 238, 0.08);
     color: #f8fafc;
-    border-left: 3px solid #6366f1;
+    border-left: 3px solid #22d3ee;
 }
 
 /* Toast Notifications */
@@ -154,5 +154,70 @@ tr:hover {
     to {
         transform: translateY(0);
         opacity: 1;
+    }
+}
+
+/* Dashboard: superficie sobria, sin efectos decorativos excesivos */
+.dashboard-view .glass-card {
+    background: #111827;
+    border-color: rgba(148, 163, 184, 0.12);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    box-shadow: none;
+    transition: border-color 120ms ease;
+}
+
+.dashboard-view .glass-card:hover {
+    background: #111827;
+    border-color: rgba(148, 163, 184, 0.22);
+    box-shadow: none;
+    transform: none;
+}
+
+.dashboard-view .rounded-2xl {
+    border-radius: 0.75rem;
+}
+
+.dashboard-view .glass-input {
+    background: #0f172a;
+    transition: border-color 120ms ease;
+}
+
+.dashboard-view .glass-input:focus {
+    border-color: rgba(34, 211, 238, 0.7);
+    box-shadow: none;
+}
+
+.dashboard-view button {
+    box-shadow: none;
+    transform: none;
+    transition: background-color 120ms ease, color 120ms ease, border-color 120ms ease;
+}
+
+.dashboard-stats {
+    overflow: hidden;
+    background: #111827;
+    border: 1px solid rgba(148, 163, 184, 0.12);
+    border-radius: 0.75rem;
+}
+
+.dashboard-stat {
+    min-width: 0;
+    padding: 1.25rem;
+    border-top: 1px solid rgba(148, 163, 184, 0.1);
+}
+
+.dashboard-stat:first-child {
+    border-top: 0;
+}
+
+@media (min-width: 1024px) {
+    .dashboard-stat {
+        border-top: 0;
+        border-left: 1px solid rgba(148, 163, 184, 0.1);
+    }
+
+    .dashboard-stat:first-child {
+        border-left: 0;
     }
 }
