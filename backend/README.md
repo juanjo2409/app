@@ -27,10 +27,10 @@ Stack: **FastAPI** · **SQLAlchemy** · **Alembic** · **PostgreSQL** · **JWT +
 
 | Rol | Responsable |
 | ----- | ------------ |
-| Scrum Master | — |
-| Product Owner | — |
-| Frontend (×2) | Rama propia (repo frontend) |
-| Backend (×2) | Andrés → `dev_andres`, Kevin → `dev_kevin` |
+| Scrum Master | Daniela |
+| Product Owner | Andrés |
+| Frontend | Juan |
+| Backend | Andrés |
 | QA | Kevin |
 
 ---
