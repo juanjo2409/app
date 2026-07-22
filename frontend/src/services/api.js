@@ -1,6 +1,18 @@
-// Same-origin via Vite proxy (local dev) or VITE_API_URL env var (production)
-const baseEnvUrl = import.meta.env.VITE_API_URL ? import.meta.env.VITE_API_URL.replace(/\/$/, '') : '';
+// Same-origin via Vite proxy (local dev) or VITE_API_URL / Render live backend fallback (production)
+const isLocalhost = Boolean(
+    window.location.hostname === 'localhost' ||
+    window.location.hostname === '127.0.0.1' ||
+    window.location.hostname === '[::1]'
+);
+
+const baseEnvUrl = import.meta.env.VITE_API_URL
+    ? import.meta.env.VITE_API_URL.replace(/\/$/, '')
+    : isLocalhost
+    ? ''
+    : 'https://lucash-backend.onrender.com';
+
 const API_BASE_URL = baseEnvUrl ? `${baseEnvUrl}/api/v1` : '/api/v1';
+
 
 const ACCESS_KEY = 'ff_access_token';
 const REFRESH_KEY = 'ff_refresh_token';
