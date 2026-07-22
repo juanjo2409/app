@@ -1,5 +1,7 @@
-// Same-origin via Vite proxy → avoids CORS issues with localhost vs 127.0.0.1
-const API_BASE_URL = '/api/v1';
+// Same-origin via Vite proxy (local dev) or VITE_API_URL env var (production)
+const baseEnvUrl = import.meta.env.VITE_API_URL ? import.meta.env.VITE_API_URL.replace(/\/$/, '') : '';
+const API_BASE_URL = baseEnvUrl ? `${baseEnvUrl}/api/v1` : '/api/v1';
+
 const ACCESS_KEY = 'ff_access_token';
 const REFRESH_KEY = 'ff_refresh_token';
 
