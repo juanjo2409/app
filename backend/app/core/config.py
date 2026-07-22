@@ -56,9 +56,10 @@ class Settings(BaseSettings):
     RATE_LIMIT_AUTH_MAX: int = 10
     RATE_LIMIT_AUTH_WINDOW_SECONDS: int = 60
 
-    CORS_ORIGINS: str = "http://localhost:5173"
+    CORS_ORIGINS: str = "*"
     CORS_ALLOW_METHODS: str = "GET,POST,PUT,PATCH,DELETE,OPTIONS"
     CORS_ALLOW_HEADERS: str = "Authorization,Content-Type,X-Webhook-Signature"
+
 
     @computed_field  # type: ignore[prop-decorator]
     @property
